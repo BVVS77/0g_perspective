@@ -2,7 +2,7 @@ local lastView = Config.DefaultView
 local forcedView = nil -- nil = free mode, number = forced view
 local locale = Locales[Config.Locale] or Locales["en"]
 
--- Notification function same as before
+-- Notification function
 local function notify(msg)
     if Config.Framework == "esx" then
         if ESX then ESX.ShowNotification(msg) end
@@ -47,12 +47,12 @@ RegisterNetEvent("zerogravity:forceView", function(mode)
     end
 end)
 
--- Commands (only work if not forced)
+-- Commands
 RegisterCommand("firstperson", function() if not forcedView then setCameraView(4) end end)
 RegisterCommand("thirdperson", function() if not forcedView then setCameraView(0) end end)
 RegisterCommand("thirdperson2", function() if not forcedView then setCameraView(2) end end)
 
--- Key toggle (disabled if forced)
+-- Key toggle
 CreateThread(function()
     while true do
         Wait(0)
@@ -68,6 +68,25 @@ CreateThread(function()
                 nextView = Config.DefaultView
             end
             setCameraView(nextView)
+        end
+    end
+end)
+
+-- Wymuszanie kamery przy celowaniu
+CreateThread(function()
+    while true do
+        Wait(0)
+        local ped = PlayerPedId()
+        if DoesEntityExist(ped) and not IsEntityDead(ped) then
+            if IsPlayerFreeAiming(PlayerId()) or IsControlPressed(0, 25) then -- celowanie PPM
+                if forcedView then
+                    -- zawsze wymusza widok z serwera
+                    SetFollowPedCamViewMode(forcedView)
+                else
+                    -- jeśli gracz ma własny zapisany widok
+                    SetFollowPedCamViewMode(lastView or Config.DefaultView)
+                end
+            end
         end
     end
 end)
